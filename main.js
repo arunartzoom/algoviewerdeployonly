@@ -191,7 +191,7 @@ wss.on("connection", ws => {
         case 'scrollevent':
                 //console.log("keyevent Message Received :"+payload.toString());
                 var tocken = payload.tocken;
-                var keyData = [4,payload.data.e]
+                var keyData = [4,payload.data.e,payload.data.y]
                 RemoteMachineWS.get(tocken).session.send(keyData.toString());
             break;
         case 'capture':
