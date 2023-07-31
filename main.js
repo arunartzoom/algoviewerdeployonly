@@ -35,7 +35,7 @@ let options = {
    key: key // fs.readFileSync('./ssl/example.key');
 };
 
-const hostname = '115.242.15.129:80';
+const hostname = 'https://algoviewer.onrender.com';
 const httpServer = http.createServer((req, res) => {
    res.statusCode = 301;
    res.setHeader('Location', `https://${hostname}${req.url}`);
