@@ -347,14 +347,27 @@ document.addEventListener("contextmenu", (event) => {
 
 
 function handleMouseWheelDirection( direction )
-      {
-          console.log( direction ); // see the direction in the console
+      {         
+	  
+		var widthRatio = 1;
+        var heightRatio = 1;
+        if(remote_resolution){
+          var widthVal = remote_resolution.width;
+          var heightVal = remote_resolution.height;
+          widthRatio = widthVal/screen.width;
+          heightRatio = heightVal/screen.height;
+          console.log("SCROLL EVENT ===================>>> : "+ screen.width +":"+widthRatio +"---"+screen.height+":"+heightRatio +"Button clicked : "+button );
+        }
+		  var scrollTopVal = window.pageYOffset || document.documentElement.scrollTop;
+		  scrollTopVal = Math.round(scrollTopVal*heightRatio);
+		  
+		  console.log( direction +"==&&&&&&&&&==="+scrollTopVal ); // see the direction in the console
           if ( direction == 'down' ) {
-              const payload = {"MsgType":"scrollevent","payload":{"tocken":uniqueTocken,"data":{ "e": "down"}}} ;
+              const payload = {"MsgType":"scrollevent","payload":{"tocken":uniqueTocken,"data":{ "e": "down", "y": scrollTopVal}}} ;
           const jsonPayload = JSON.stringify(payload);
           ws.send(jsonPayload);
           } else if ( direction == 'up' ) {
-              const payload = {"MsgType":"scrollevent","payload":{"tocken":uniqueTocken,"data":{ "e": "up"}}} ;
+              const payload = {"MsgType":"scrollevent","payload":{"tocken":uniqueTocken,"data":{ "e": "up", "y": scrollTopVal}}} ;
           const jsonPayload = JSON.stringify(payload);
           ws.send(jsonPayload);
           } else {
