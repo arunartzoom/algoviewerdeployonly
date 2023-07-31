@@ -35,17 +35,17 @@ let options = {
    key: key // fs.readFileSync('./ssl/example.key');
 };
 
-const hostname = 'https://algoviewer.onrender.com';
+/*const hostname = 'https://algoviewer.onrender.com';
 const httpServer = http.createServer((req, res) => {
    res.statusCode = 301;
    res.setHeader('Location', `https://${hostname}${req.url}`);
    res.end(); // make sure to call send() or end() to send the response
 });
-httpServer.listen(8080);
+httpServer.listen(8080);*/
 
 
 // Create an HTTP server
-const server = https.createServer(options,(req, res) => {
+const server = http.createServer((req, res) => {
   console.log(`${req.method} ${req.url}`);
 
   const extension = path.extname(req.url).slice(1);
