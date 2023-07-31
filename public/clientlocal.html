@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Algol screen share test</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+</head>
+<style>
+#container {
+  width: 100%;
+  height: 100%;
+
+}
+#navi,
+#infoi {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+#infoi {
+  z-index: 0; /* change it to 5 for blocking overlay */
+}
+</style>
+<body>
+<div id="container">
+
+  <div id="infoi">
+  <canvas id="captureCanvas" width="100%" height="100%"></canvas>
+  </div>
+  <div id="navi" style="top: 25%;text-align: center;">	
+	  <label for="remoteTocken">Enter Remote Machine Tocken:</label>
+	  <input type="text" id="remoteTocken" name="remoteTocken"><br><br>
+	  <input type="button" value="Connect" onclick="remoteTockenOnClick();">
+  </div> 
+  <button id="fullscreenBtn" style="position:absolute;right:0;top:0;z-index:10;background:blue;color:white;" type="button">Full Screen</button>
+
+</div>
+
+
+<script>
+const iframescreenshareEle = document.getElementById("iframescreenshare");
+const ws = new WebSocket("ws://localhost:9007");
+ws.addEventListener("open", () =>{
+  console.log("We are connected");
+  var uniqueTocken = prompt("Please enter the remote Machine Tocken ");
+  if(uniqueTocken){
+	ws.send("{\"MsgType\":\"connectController\",\"payload\":{\"tocken\":\""+uniqueTocken+"\",\"ClientType\":\"ControllingMachine\"}}");
+  }
+  
+});
+ 
+ws.addEventListener('message', function (event) {
+    //console.log(event.data);
+	let dataObj = JSON.parse(event.data.toString());
+    let MsgType = dataObj.MsgType;
+    let payload = dataObj.payload;
+	switch(MsgType){
+			case 'connect':
+                console.log("Event Message Received :"+payload.toString());
+            break;
+            case 'remote_res':
+                console.log("Connect Message Received");
+				let res = payload;
+				let width = res.width;
+				let height = res.height;
+				document.getElementById("container").style.width = width+"px";
+				document.getElementById("container").style.height = height+"px";
+				
+				document.getElementById("navi").style.width = width+"px";
+				document.getElementById("navi").style.height = height+"px";
+				
+				document.getElementById("infoi").style.width = width+"px";
+				document.getElementById("infoi").style.height = height+"px";
+				
+				document.getElementById("captureCanvas").style.width = width+"px";
+				document.getElementById("captureCanvas").style.height = height+"px";
+            break;
+        case 'event':
+                console.log("Event Message Received :"+payload.toString());
+            break;
+        case 'capture':
+               // console.log("capture Message Received :"+payload.toString());
+				let imgData = payload;
+				var canvas = document.getElementById("captureCanvas");
+				var ctx = canvas.getContext("2d");
+				var image = new Image(1536,864);
+				image.onload = function() {
+				 var imgWidth=image.width;
+				 var imgHeight=image.height;
+				 canvas.width= imgWidth;
+				 canvas.height=imgHeight;
+				 ctx.drawImage(image,0,0,imgWidth,imgHeight);
+				  //ctx.drawImage(image, 0, 0,1536,864);
+				};
+				image.src = "data:image/png;base64,"+imgData;
+                //RemoteMachineWS.send("{\"MsgType\":\"capture\",\"payload\":"+JSON.stringify(payload.data)+"}");
+            break;
+            
+            
+        }
+	//ws.send("{\"MsgType\":\"event\",\"payload\":{\"data\":\"data\"}}");
+});
+
+
+
+fullscreenBtn.addEventListener("click", function(event) {
+  var button = event.button; 
+  var elem = document.getElementById("captureCanvas");
+  console.log("Full screen Button pressed: " + button);
+  if (document.fullscreenEnabled) {
+    /* Show the element in fullscreen */
+    elem.requestFullscreen();
+  }
+});
+
+document.addEventListener("keydown", function (event) {
+  if (event.defaultPrevented) {
+    return; // Do nothing if the event was already processed
+  }
+  const payload = {"MsgType":"keydownevent","payload":{"data":{ "e": event.keyCode}}} ;
+
+  // Convert JSON payload to string
+  const jsonPayload = JSON.stringify(payload);
+  ws.send(jsonPayload);
+  console.log("Key Code "+ event.keyCode);
+
+  // Cancel the default action to avoid it being handled twice
+  event.preventDefault();
+}, true);
+document.addEventListener("keyup", function (event) {
+  if (event.defaultPrevented) {
+    return; // Do nothing if the event was already processed
+  }
+  const payload = {"MsgType":"keyupevent","payload":{"data":{ "e": event.keyCode}}} ;
+
+  // Convert JSON payload to string
+  const jsonPayload = JSON.stringify(payload);
+  ws.send(jsonPayload);
+  console.log("Key Code "+ event.keyCode);
+
+  // Cancel the default action to avoid it being handled twice
+  event.preventDefault();
+}, true);
+// Capture mouse movement
+/*infoi.addEventListener("mousemove", function(event) {
+  var mouseX = event.clientX; // X-coordinate of the mouse pointer
+  var mouseY = event.clientY; // Y-coordinate of the mouse pointer
+
+  //console.log("Mouse position: X=" + mouseX + ", Y=" + mouseY);
+});*/
+
+// Capture mouse button click
+infoi.addEventListener("click", function(event) {
+  var mouseX = event.clientX; // X-coordinate of the mouse pointer
+  var mouseY = event.clientY; // Y-coordinate of the mouse pointer
+  var button = event.button; // The clicked button (0: left button, 1: middle button, 2: right button)
+
+  console.log("Clicked at: X=" + mouseX + ", Y=" + mouseY);
+  console.log("Button clicked: " + button);
+  const payload = {"MsgType":"mouseevent","payload":{"data":{ "x":Math.round( mouseX*1.2), "y": Math.round(mouseY*1.2),"btn":button}}} ;
+
+  // Convert JSON payload to string
+  const jsonPayload = JSON.stringify(payload);
+  ws.send(jsonPayload);
+});
+
+document.onmousewheel = function( e ) {
+    handleMouseWheelDirection( detectMouseWheelDirection( e ) );
+};
+if ( window.addEventListener ) {
+    document.addEventListener( 'DOMMouseScroll', function( e ) {
+        handleMouseWheelDirection( detectMouseWheelDirection( e ) );
+    });
+}
+/*// Capture mouse button press and release
+infoi.addEventListener("mousedown", function(event) {
+  var button = event.button; // The pressed button (0: left button, 1: middle button, 2: right button)
+
+ // console.log("Button pressed: " + button);
+});
+
+infoi.addEventListener("mouseup", function(event) {
+  var button = event.button; // The released button (0: left button, 1: middle button, 2: right button)
+
+  //console.log("Button released: " + button);
+});*/
+
+function changeHandler(e) {
+	if (!window.screenTop && !window.screenY) {
+       console.log('not fullscreen');
+	   $("#infoi").css('z-index', 5);
+    } else {
+		$("#infoi").css('z-index', 5);
+         console.log('fullscreen');
+    }
+}
+function detectMouseWheelDirection( e )
+{
+    var delta = null,
+        direction = false
+    ;
+    if ( !e ) { // if the event is not provided, we get it from the window object
+        e = window.event;
+    }
+    if ( e.wheelDelta ) { // will work in most cases
+        delta = e.wheelDelta / 60;
+    } else if ( e.detail ) { // fallback for Firefox
+        delta = -e.detail / 2;
+    }
+    if ( delta !== null ) {
+        direction = delta > 0 ? 'up' : 'down';
+    }
+
+    return direction;
+}
+function handleMouseWheelDirection( direction )
+{
+    console.log( direction ); // see the direction in the console
+    if ( direction == 'down' ) {
+        const payload = {"MsgType":"scrollevent","payload":{"data":{ "e": "down"}}} ;
+		const jsonPayload = JSON.stringify(payload);
+		ws.send(jsonPayload);
+    } else if ( direction == 'up' ) {
+        const payload = {"MsgType":"scrollevent","payload":{"data":{ "e": "up"}}} ;
+		const jsonPayload = JSON.stringify(payload);
+		ws.send(jsonPayload);
+    } else {
+        // this means the direction of the mouse wheel could not be determined
+    }    	  
+}
+
+
+//document.addEventListener("fullscreenchange", changeHandler, false);
+//document.addEventListener("webkitfullscreenchange", changeHandler, false);
+//document.addEventListener("mozfullscreenchange", changeHandler, false);
+//$(document).on('enterFullScreen', function(){
+   // console.log("================================>>> ENTERED FULL SCREEN");
+//});
+
+</script>
+</body>
+</html>
