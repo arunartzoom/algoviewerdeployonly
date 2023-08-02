@@ -161,6 +161,7 @@ function initialize(){
   function renderCanvas(){
     if(remote_resolution){
       var ctx = canvas.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
       var image = new Image(remote_resolution.width,remote_resolution.height);
       image.onload = function() {
         var imgWidth=image.width;
