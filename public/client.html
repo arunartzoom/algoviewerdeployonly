@@ -145,7 +145,7 @@ ws.addEventListener('message', function (event) {
         case 'capture':{
                // console.log("capture Message Received :"+payload.toString());
         //let imgData = payload;
-        bufferedImageStr = {"data":payload.data,"diffIndex":payload.diffIndex}
+        bufferedImageStr = {"data":payload.data,"diffIndex":payload.diffIndex,"isDirty":true}
         if(previousBufferedImage == null){
           previousBufferedImage = bufferedImageStr.data;
         }
@@ -156,6 +156,9 @@ ws.addEventListener('message', function (event) {
     }
   //ws.send("{\"MsgType\":\"event\",\"payload\":{\"data\":\"data\"}}");
 });
+
+
+function initialize(){
 
         function draw() {
             // Clear the canvas
@@ -171,35 +174,34 @@ ws.addEventListener('message', function (event) {
         }	
 // Start the animation loop
         draw();
-function initialize(){
-
-
 
   console.log("====================CONNECTION IS ESTABLISHED. INITIALISING EVENTS========================");
   function renderCanvas(){
     if(remote_resolution){
-      var image = new Image(remote_resolution.width,remote_resolution.height);
-      image.onload = function() {
-		canvasImage = image;
-      };
+
     
    // image.src = "data:image/png;base64,"+bufferedImageStr.data;
-        if(bufferedImageStr.diffIndex >= 0 ){
+        if(bufferedImageStr.diffIndex >= 0 && bufferedImageStr.isDirty == true){
           if(previousBufferedImage){
+	  var image = new Image(remote_resolution.width,remote_resolution.height);
+	      image.onload = function() {
+			canvasImage = image;
+	      };
             var imageString = previousBufferedImage.substring(0,bufferedImageStr.diffIndex);
             imageString = imageString+bufferedImageStr.data;
             image.src = "data:image/png;base64,"+imageString;
            // console.log(imageString);
             //previousBufferedImage = imageString;
           }
+		bufferedImageStr.isDirty = false;
         } 
 
     }
   }
 
-  // setInterval(function () { 
-  //   requestAnimationFrame(renderCanvas) 
-  // }, 100);
+ setInterval(function () { 
+    renderCanvas();
+ }, 100);
 
 
 
