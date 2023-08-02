@@ -80,6 +80,10 @@ var bufferedImageStr = {};
 var uniqueTocken = 0;
 var remote_resolution = null;
 var previousBufferedImage = null;
+let canvasImage;
+const canvas = document.getElementById('captureCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
 ws.addEventListener("open", () =>{
   console.log("We are connected");
   //var uniqueTockenVal = prompt("Please enter the remote Machine Tocken ");
@@ -130,6 +134,8 @@ ws.addEventListener('message', function (event) {
         
         document.getElementById("captureCanvas").style.width = width+"px";
         document.getElementById("captureCanvas").style.height = height+"px";
+	canvas.width = width;
+	canvas.height = height;      
             break;
         }
         case 'event':{
@@ -151,25 +157,30 @@ ws.addEventListener('message', function (event) {
   //ws.send("{\"MsgType\":\"event\",\"payload\":{\"data\":\"data\"}}");
 });
 
+        function draw() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the image if available
+            if (canvasImage) {
+                ctx.drawImage(canvasImage, 0, 0, canvas.width, canvas.height);
+            }
+
+            // Request the next animation frame
+            requestAnimationFrame(draw);
+        }	
+// Start the animation loop
+        draw();
 function initialize(){
 
 
 
   console.log("====================CONNECTION IS ESTABLISHED. INITIALISING EVENTS========================");
-  
-  var canvas = document.getElementById("captureCanvas");
   function renderCanvas(){
     if(remote_resolution){
-      var ctx = canvas.getContext("2d");
-      ctx.imageSmoothingEnabled = false;
       var image = new Image(remote_resolution.width,remote_resolution.height);
       image.onload = function() {
-        var imgWidth=image.width;
-        var imgHeight=image.height;
-        canvas.width= imgWidth;
-        canvas.height=imgHeight;
-        ctx.drawImage(image,0,0,imgWidth,imgHeight);
-        //ctx.drawImage(image, 0, 0,1536,864);
+		canvasImage = image;
       };
     
    // image.src = "data:image/png;base64,"+bufferedImageStr.data;
@@ -186,9 +197,9 @@ function initialize(){
     }
   }
 
-  setInterval(function () { 
-    requestAnimationFrame(renderCanvas) 
-  }, 100);
+  // setInterval(function () { 
+  //   requestAnimationFrame(renderCanvas) 
+  // }, 100);
 
 
 
