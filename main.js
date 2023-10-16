@@ -112,7 +112,7 @@ wss.on("connection", ws => {
         switch(MsgType){
    			case 'ackRemote':{
   				console.log("Remote Machine ACK Message Received");
-  				let randomUniqueNo = Math.floor((Math.random() * 10000) + 1000);
+  				let randomUniqueNo = 1234;//Math.floor((Math.random() * 10000) + 1000);
   				let ackReply = [5,randomUniqueNo];
   				ws.send(ackReply.toString());
   			break;
